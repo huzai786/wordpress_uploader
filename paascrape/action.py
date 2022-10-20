@@ -37,7 +37,9 @@ def script(query_keyword):
 
     # main workflow
     paa = check_exist(
-        driver, By.XPATH, f'//*[@id="rso"]//div/div[@data-initq="{query_keyword.lower()}" and @data-it="rq"]/div/div[2]')
+        driver,
+        By.XPATH,
+        f'//*[@id="rso"]//div/div[@data-initq="{query_keyword.lower()}" and @data-it="rq"]/div/div[2]')
     if isinstance(paa, WebElement):
         driver.execute_script("arguments[0].scrollIntoView();", paa)
         driver.execute_script("window.scrollBy(0, -200);")
@@ -61,4 +63,3 @@ def script(query_keyword):
         driver.quit()
 
     return html
-

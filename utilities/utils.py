@@ -30,7 +30,12 @@ def add_category_to_wp(category_name: str) -> Optional[int]:
         "parent": 0
     }
     try:
-        res = requests.post(WP_URL + '/categories', auth=auth, headers=headers, json=data)
+        res = requests.post(
+            WP_URL +
+            '/categories',
+            auth=auth,
+            headers=headers,
+            json=data)
         if res.status_code == 201:
             return res.json().get('id')
         else:
@@ -49,7 +54,13 @@ def delete_category_from_wp(category_id: int) -> bool:
     global WP_URL, headers, auth
 
     try:
-        res = requests.delete(WP_URL + f'/categories/{category_id}', auth=auth, headers=headers, json={"force": True})
+        res = requests.delete(
+            WP_URL +
+            f'/categories/{category_id}',
+            auth=auth,
+            headers=headers,
+            json={
+                "force": True})
         if res.status_code == 200:
             deleted = res.json().get('deleted')
             if deleted:
@@ -77,7 +88,12 @@ def add_keyword_to_wp(parent_id: int, keyword_name: str) -> Optional[int]:
         "parent": parent_id
     }
     try:
-        res = requests.post(WP_URL + '/categories', auth=auth, headers=headers, json=data)
+        res = requests.post(
+            WP_URL +
+            '/categories',
+            auth=auth,
+            headers=headers,
+            json=data)
         if res.status_code == 201:
             return res.json().get('id')
         else:
@@ -85,6 +101,7 @@ def add_keyword_to_wp(parent_id: int, keyword_name: str) -> Optional[int]:
 
     except RequestException as e:
         print(e)
+
 
 def delete_keyword_from_wp(keyword_id):
     """
@@ -95,7 +112,13 @@ def delete_keyword_from_wp(keyword_id):
     global WP_URL, headers, auth
 
     try:
-        res = requests.delete(WP_URL + f'/categories/{keyword_id}', auth=auth, headers=headers, json={"force": True})
+        res = requests.delete(
+            WP_URL +
+            f'/categories/{keyword_id}',
+            auth=auth,
+            headers=headers,
+            json={
+                "force": True})
         if res.status_code == 200:
             deleted = res.json().get('deleted')
             if deleted:
@@ -106,6 +129,7 @@ def delete_keyword_from_wp(keyword_id):
 
     except RequestException as e:
         print(e)
+
 
 def keywords_from_file(filepath):
     keywords = []

@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 
 
-
 # def category_section(categories):
 #
 #     return category_section_layout

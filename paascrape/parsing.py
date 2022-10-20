@@ -18,11 +18,14 @@ def tag_len_2(answer_content):
 
     # getting answer description
     desc_type_answer = answer_content[0]
-    answer = (desc_type_answer.get_text()).replace("\n", "") if desc_type_answer else 'Answer Not Found!'
+    answer = (desc_type_answer.get_text()).replace(
+        "\n", "") if desc_type_answer else 'Answer Not Found!'
     ans = re.sub(r'\s+', ' ', answer)
     ans = re.sub(r'More items\.\.\.', '', ans)
 
-    date = re.findall(r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})", ans)
+    date = re.findall(
+        r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})",
+        ans)
 
     if date:
         ans = ans.removesuffix(date[0][0])
@@ -44,11 +47,14 @@ def tag_len_3(answer_content):
 
     # getting answer body
     answer_body = answer_content[1].get_text()
-    answer = answer_heading.replace("\n", "") + '\n' + answer_body.replace("\n", "")
+    answer = answer_heading.replace(
+        "\n", "") + '\n' + answer_body.replace("\n", "")
     ans = re.sub(r'\s+', ' ', answer)
     ans = re.sub(r'More items\.\.\.', '', ans)
 
-    date = re.findall(r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})", ans)
+    date = re.findall(
+        r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})",
+        ans)
     if date:
         ans = ans.removesuffix(date[0][0])
         publication_date = date[0][0]
@@ -74,16 +80,22 @@ def extract_data(html: Tag) -> Union[Questions, None]:
         main_content = items[1].find_all('div', recursive=False)
 
         if len(main_content) == 2:
-            answer_tag = main_content[0].find('div')  # div that contains 2 or more divs with only id attribute
+            # div that contains 2 or more divs with only id attribute
+            answer_tag = main_content[0].find('div')
             answer_content = answer_tag.find_all('div', recursive=False)
 
             if len(answer_content) == 2:
-                answer, source_url, publication_date = tag_len_2(answer_content)
+                answer, source_url, publication_date = tag_len_2(
+                    answer_content)
 
             if len(answer_content) == 3:
-                answer, source_url, publication_date = tag_len_3(answer_content)
-        question_object = Questions(question=question, answer=answer, source_url=source_url,
-                                    publication_date=publication_date)
+                answer, source_url, publication_date = tag_len_3(
+                    answer_content)
+        question_object = Questions(
+            question=question,
+            answer=answer,
+            source_url=source_url,
+            publication_date=publication_date)
         return question_object
 
     else:
@@ -95,7 +107,8 @@ def parse(html, query):
     bs = BeautifulSoup(html, 'lxml')
     try:
         main_block = bs.find(
-            'div', {"id": "rso", "data-async-context": f"query:{quote(query)}"})
+            'div', {
+                "id": "rso", "data-async-context": f"query:{quote(query)}"})
 
         parent = main_block.find(
             'div', {"data-initq": f"{query.lower()}", "data-it": "rq"})

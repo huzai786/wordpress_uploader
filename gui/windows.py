@@ -35,8 +35,10 @@ def add_category_window():
                 sg.popup_error('category field is empty!')
 
             else:
-                if category_name not in [i[1] for i in get_categories_from_db()]:
-                    if sg.popup_ok_cancel(f'Are you sure you want to add "{category_name}"') == 'OK':
+                if category_name not in [i[1]
+                                         for i in get_categories_from_db()]:
+                    if sg.popup_ok_cancel(
+                            f'Are you sure you want to add "{category_name}"') == 'OK':
                         category_id = add_category_to_wp(category_name)
                         if isinstance(category_id, int):
                             add_category_to_db(category_id, category_name)
@@ -50,6 +52,7 @@ def add_category_window():
                     window['-USER_INPUT-'].update('')
 
     window.close()
+
 
 def add_keyword_window(cat_id):
     """add keyword to category"""
@@ -72,11 +75,13 @@ def add_keyword_window(cat_id):
             if keyword_name == '':
                 sg.popup_error('Enter Keyword!')
             else:
-                keywords = [i[1] for i in get_category_keywords_details(cat_id) if get_category_keywords_details(cat_id)]
+                keywords = [i[1] for i in get_category_keywords_details(
+                    cat_id) if get_category_keywords_details(cat_id)]
                 if keyword_name not in keywords:
                     keyword_id = add_keyword_to_wp(cat_id, keyword_name)
                     if not keyword_id:
-                        sg.popup_error('We have encountered an unknown error, could not create keyword in wordpress')
+                        sg.popup_error(
+                            'We have encountered an unknown error, could not create keyword in wordpress')
                         break
                     add_keyword_to_db(cat_id, keyword_id, keyword_name)
                     break
@@ -87,9 +92,11 @@ def add_keyword_window(cat_id):
 
     window.close()
 
+
 def delete_category_window(cat_id):
     """delete keywords from db and wp"""
-    keywords = [(i[0], i[1]) for i in get_category_keywords_details(cat_id) if get_category_keywords_details(cat_id)]
+    keywords = [(i[0], i[1]) for i in get_category_keywords_details(
+        cat_id) if get_category_keywords_details(cat_id)]
     delete_keyword_window_layout = [
         [sg.Text('Select one or more keyword to delete.')],
         [sg.Listbox(keywords, select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE, key='-KEYWORD_LIST-', size=(30, 20),
@@ -110,17 +117,17 @@ def delete_category_window(cat_id):
             if not keywords:
                 sg.popup_error('No keyword selected!')
             else:
-                if sg.popup_ok_cancel(f'delete {len(keywords)} items?') == "OK":
+                if sg.popup_ok_cancel(
+                        f'delete {len(keywords)} items?') == "OK":
                     for k in keywords:
                         if delete_keyword_from_wp(k[0]):
                             delete_keyword_from_db(cat_id, k[0])
-                            keywords = [(i[0], i[1]) for i in get_category_keywords_details(cat_id) if
-                                        get_category_keywords_details(cat_id)]
+                            keywords = [(i[0], i[1]) for i in get_category_keywords_details(
+                                cat_id) if get_category_keywords_details(cat_id)]
                             window['-KEYWORD_LIST-'].update(keywords)
                         else:
-                            sg.popup_error('We have encountered an unknown error while deleting keyword from wordpress!')
+                            sg.popup_error(
+                                'We have encountered an unknown error while deleting keyword from wordpress!')
                             break
 
     window.close()
-
-

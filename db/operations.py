@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from db.models import Category, Keyword, Question, Base
 
+
 e = create_engine(f'sqlite:///{os.getcwd()}\\database.db')
+
 
 def add_category_to_db(category_id: int,
                        category_name: str) -> None:
@@ -48,7 +50,10 @@ def get_categories_from_db() -> List[Tuple]:
         return categories
 
 
-def add_keyword_to_db(parent_id: int, keyword_wp_id, keyword_name: str) -> None:
+def add_keyword_to_db(
+        parent_id: int,
+        keyword_wp_id,
+        keyword_name: str) -> None:
     """
     add keyword to database with category as parent_id
     :param keyword_wp_id: keyword.wp_id
@@ -58,7 +63,8 @@ def add_keyword_to_db(parent_id: int, keyword_wp_id, keyword_name: str) -> None:
 
     global e
     with Session(e) as session:
-        cat = session.execute(select(Category).where(Category.wp_id == parent_id)).all()[0]
+        cat = session.execute(select(Category).where(
+            Category.wp_id == parent_id)).all()[0]
         keyword = Keyword(name=keyword_name, wp_id=keyword_wp_id)
         cat[0].child_categories.append(keyword)
         session.add(keyword)
@@ -74,27 +80,30 @@ def delete_keyword_from_db(parent_id: int, keyword_wp_id: int) -> None:
     global e
 
     with Session(e) as session:
-        category = session.execute(select(Category).where(Category.wp_id == parent_id)).first()[0]
-        keyword = session.execute(select(Keyword).where(Keyword.wp_id == keyword_wp_id)).first()[0]
+        category = session.execute(select(Category).where(
+            Category.wp_id == parent_id)).first()[0]
+        keyword = session.execute(select(Keyword).where(
+            Keyword.wp_id == keyword_wp_id)).first()[0]
         category.child_categories.remove(keyword)
         session.commit()
+
 
 def get_category_keywords_details(wp_category_id):
     global e
 
     rows = []
     with Session(e) as session:
-        stmt = select(Keyword).where(Keyword.parent_category.has(Category.wp_id == wp_category_id))
+        stmt = select(Keyword).where(
+            Keyword.parent_category.has(Category.wp_id == wp_category_id))
         keyword_details = session.execute(stmt).all()
         if keyword_details:
             for keyword in keyword_details:
                 k = keyword[0]
-                rows.append([k.wp_id, k.name, k.is_posted, k.is_processed, len(k.questions)])
+                rows.append([k.wp_id, k.name, k.is_posted,
+                            k.is_processed, len(k.questions)])
 
     return rows
 
 
 if __name__ == '__main__':
     Base.metadata.create_all(bind=e)
-
-
