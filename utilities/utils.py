@@ -1,4 +1,5 @@
 """operational utilities for gui"""
+import os
 from typing import Optional
 
 import requests
@@ -106,4 +107,13 @@ def delete_keyword_from_wp(keyword_id):
     except RequestException as e:
         print(e)
 
-# def
+def keywords_from_file(filepath):
+    keywords = []
+
+    if not os.path.exists(filepath):
+        return keywords
+
+    with open(filepath, 'r') as f:
+        keywords = f.readlines()
+
+    return keywords

@@ -94,7 +94,7 @@ def delete_category_window(cat_id):
         [sg.Text('Select one or more keyword to delete.')],
         [sg.Listbox(keywords, select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE, key='-KEYWORD_LIST-', size=(30, 20),
                     enable_events=True),
-         sg.Button('Delete Selected Keywords?', key='-DELETE-'), sg.Button('Ok')],
+         sg.Button('Delete Selected Keywords?', key='-DELETE-'), sg.Button('Cancel')],
     ]
 
     window = sg.Window('delete keyword', delete_keyword_window_layout)
@@ -102,7 +102,7 @@ def delete_category_window(cat_id):
     while True:
         event, value = window.read()
 
-        if event in (sg.WIN_CLOSED, 'Ok'):
+        if event in (sg.WIN_CLOSED, 'Cancel'):
             break
 
         elif event == '-DELETE-':

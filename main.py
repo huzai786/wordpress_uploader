@@ -6,12 +6,14 @@ from gui.windows import add_category_window, add_keyword_window, delete_category
 from db.operations import (
     get_categories_from_db,
     delete_category_from_db,
-    get_category_keywords_details
+    get_category_keywords_details, add_keyword_to_db
 )
-from utilities.utils import delete_category_from_wp
+from utilities.utils import delete_category_from_wp, keywords_from_file, add_keyword_to_wp
 
-keywords_detail_headings = ["id", "Keyword", "is posted", "is processed", "number of questions"]
+keywords_detail_headings = ["id", "       Keyword             ", "is posted", "is processed", "no of questions"]
 
+
+sg.theme('DarkAmber')
 
 def make_window():
     """create a window object"""
@@ -31,12 +33,14 @@ def make_window():
         [sg.Text('Keywords', font="SansSerif 12 bold"), sg.Push(), sg.Text('Category:', font="SansSerif 12 bold"),
             sg.Text('---------------', key='-KEYWORD_COL_CAT-', font="SansSerif 12")],
 
-        [sg.Table(values=[['--', '---', '---', '---', '---']], headings=keywords_detail_headings, size=(100, 16),
+        [sg.Table(values=[['--', '---', '---', '---', '---']], headings=keywords_detail_headings, size=(120, 16),
                   def_col_width=30, row_height=20, font="SansSerif 10", justification='center',
                   key='-KEYWORDS_TABLE-')],
 
-        [sg.Button('Add Keyword', key='-ADD_KEYWORD-'), sg.Button('Delete Keyword', key='-DELETE_KEYWORD-'), sg.Push(),
-         sg.Button('Add From File', key='-ADD_KEYWORD_FROM_FILE-')]
+        [sg.Button('Add Keyword', key='-ADD_KEYWORD-'), sg.Button('Delete Keyword', key='-DELETE_KEYWORD-'),
+         sg.Push(), sg.InputText(key='-FILE_PATH-'), sg.FileBrowse(file_types=[('Text Files', '*.txt')]),
+         sg.Submit('Add from file', key='-ADD_KEYWORD_FROM_FILE-')]
+
     ]
 
     setting_layout = [
@@ -111,7 +115,30 @@ while True:
             window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
 
     elif event == '-ADD_KEYWORD_FROM_FILE-':
-        pass  # TO BE DONE
+        file_path = values['-FILE_PATH-']
+        selected_category = values['_LIST_']
+
+        if file_path:
+            if not selected_category:
+                sg.popup_error('No category selected!')
+
+            else:
+                keywords = keywords_from_file(file_path)
+                selected_category_id, selected_category_name = selected_category[0]
+                current_keywords = [i[1] for i in get_category_keywords_details(selected_category_id) if get_category_keywords_details(selected_category_id)]
+                for k in keywords:
+                    k = k.replace('\n', '')
+                    if k not in current_keywords:
+                        keyword_id = add_keyword_to_wp(selected_category_id, k)
+                        if not keyword_id:
+                            pass
+                        add_keyword_to_db(selected_category_id, keyword_id, k)
+                        updated_keywords_table = get_category_keywords_details(selected_category_id)
+                        window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
+                        window.refresh()
+                window['-FILE_PATH-'].update('')
+        else:
+            sg.popup_error('No file selected!')
 
     elif event == '-DELETE_KEYWORD-':
         selected_category = values['_LIST_']
