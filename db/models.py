@@ -8,7 +8,7 @@ class Category(Base):
     __tablename__ = "category"
 
     id = Column(Integer, primary_key=True)
-    wp_id = Column(Integer, nullable=False)
+    wp_id = Column(Integer, nullable=False, unique=True)
     name = Column(String)
 
     child_categories = relationship("Keyword", back_populates="parent_category", cascade="all, delete-orphan")
@@ -25,8 +25,8 @@ class Keyword(Base):
     wp_id = Column(Integer, unique=True)
     name = Column(String)
     questions = relationship("Question", back_populates="keyword", cascade="all, delete-orphan")
-    is_processed = Column(Boolean, nullable=True)
-    is_posted = Column(Boolean, nullable=True)
+    is_processed = Column(Boolean, nullable=True, default=False)
+    is_posted = Column(Boolean, nullable=True, default=False)
 
     category_id = Column(String, ForeignKey('category.id'), nullable=True)
     parent_category = relationship("Category", back_populates="child_categories")

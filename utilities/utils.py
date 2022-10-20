@@ -1,4 +1,4 @@
-"""operational utilities for frontend"""
+"""operational utilities for gui"""
 from typing import Optional
 
 import requests
@@ -39,9 +39,11 @@ def add_category_to_wp(category_name: str) -> Optional[int]:
         print(e)
 
 
-def delete_category_from_wp(category_id):
+def delete_category_from_wp(category_id: int) -> bool:
     """
-    Creates category in word press database
+    Deletes a category in word press database
+    :param category_id: category.wp_id to delete
+    :return: returns True if successful, else return False
     """
     global WP_URL, headers, auth
 
@@ -58,11 +60,50 @@ def delete_category_from_wp(category_id):
     except RequestException as e:
         print(e)
 
-def add_keyword_to_wp(parent_id: int) -> int:
+
+def add_keyword_to_wp(parent_id: int, keyword_name: str) -> Optional[int]:
     """
     add keyword as sub-category to the word press.
 
+    :param keyword_name: name of the keyword
     :param parent_id: category id to which this keyword will belong to.
     :rtype: int: return the newly created sub category.
     """
+    global WP_URL, headers, auth
+    data = {
+        "name": keyword_name,
+        "slug": keyword_name,
+        "parent": parent_id
+    }
+    try:
+        res = requests.post(WP_URL + '/categories', auth=auth, headers=headers, json=data)
+        if res.status_code == 201:
+            return res.json().get('id')
+        else:
+            return None
 
+    except RequestException as e:
+        print(e)
+
+def delete_keyword_from_wp(keyword_id):
+    """
+    Deletes a keyword in word press database
+    :param keyword_id: category.wp_id to delete
+    :return: returns True if successful, else return False
+    """
+    global WP_URL, headers, auth
+
+    try:
+        res = requests.delete(WP_URL + f'/categories/{keyword_id}', auth=auth, headers=headers, json={"force": True})
+        if res.status_code == 200:
+            deleted = res.json().get('deleted')
+            if deleted:
+                return True
+        else:
+            print(res.status_code)
+            return False
+
+    except RequestException as e:
+        print(e)
+
+# def
