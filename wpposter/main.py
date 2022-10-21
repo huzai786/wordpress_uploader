@@ -12,7 +12,7 @@ from utilities.utils import delete_category_from_wp, keywords_from_file, add_key
 
 keywords_detail_headings = [
     "id",
-    "       Keyword             ",
+    "\tKeyword                ",
     "is posted",
     "is processed",
     "no of questions"]
@@ -65,7 +65,7 @@ def make_window():
         [sg.Frame('Settings', setting_layout,
                   element_justification='c', font="SansSerif 17 bold")],
 
-        [sg.Button('Start Scraping', tooltip='This will scrape questions from all non-processed keywords and dump then into the local database make sure you are ready!',
+        [sg.Button('Start Scraping', tooltip='This will scrape questions from all non-processed keywords make sure you are ready!',
                    size=(20, 2)), sg.Push(), sg.Button('Cancel', size=(15, 2))]
     ]
 

@@ -8,4 +8,5 @@ fake_useragent
 webdriver_manager
 alembic~=1.8.1
 beautifulsoup4~=4.11.1
-autopep8
+lxml
+

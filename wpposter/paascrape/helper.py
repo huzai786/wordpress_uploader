@@ -1,7 +1,7 @@
 from selenium.common.exceptions import NoSuchElementException
 
 
-def check_exist(driver, select_by, selector):
+def __check_exist(driver, select_by, selector):
     try:
         elem = driver.find_element(select_by, selector)
         if elem:
@@ -9,3 +9,4 @@ def check_exist(driver, select_by, selector):
 
     except NoSuchElementException:
         return False
+

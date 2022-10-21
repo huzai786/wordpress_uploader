@@ -9,7 +9,7 @@ from bs4 import Tag, BeautifulSoup
 from .question import Questions
 
 
-def tag_len_2(answer_content):
+def _tag_len_2(answer_content):
     publication_date = None
 
     # getting source url
@@ -34,7 +34,7 @@ def tag_len_2(answer_content):
     return ans, url, publication_date
 
 
-def tag_len_3(answer_content):
+def _tag_len_3(answer_content):
     publication_date = None
 
     # getting source url
@@ -63,6 +63,13 @@ def tag_len_3(answer_content):
 
 
 def extract_data(html: Tag) -> Union[Questions, None]:
+    """
+    extract question data from html
+    :rtype: Questions
+    :param html: Bs4 Tag element containing the relevant data
+    :return: NamedTuple containing the questions or None
+    """
+
     qs_data = html.find('div', class_=re.compile(
         r'related-question-pair')).find('div', recursive=False)
     items = [i for i in list(qs_data.children) if len(str(i)) > 10]
@@ -85,11 +92,11 @@ def extract_data(html: Tag) -> Union[Questions, None]:
             answer_content = answer_tag.find_all('div', recursive=False)
 
             if len(answer_content) == 2:
-                answer, source_url, publication_date = tag_len_2(
+                answer, source_url, publication_date = _tag_len_2(
                     answer_content)
 
             if len(answer_content) == 3:
-                answer, source_url, publication_date = tag_len_3(
+                answer, source_url, publication_date = _tag_len_3(
                     answer_content)
         question_object = Questions(
             question=question,
@@ -102,19 +109,23 @@ def extract_data(html: Tag) -> Union[Questions, None]:
         return None
 
 
-def parse(html, query):
-    """parse question and their answers from a page"""
+def parse(html: str,
+          keyword: str) -> None:
+    """parse question and their answers from a page
+    :param html: html content with questions
+    :param keyword: keyword to search
+    """
     bs = BeautifulSoup(html, 'lxml')
     try:
         main_block = bs.find(
             'div', {
-                "id": "rso", "data-async-context": f"query:{quote(query)}"})
+                "id": "rso", "data-async-context": f"query:{quote(keyword)}"})
 
         parent = main_block.find(
-            'div', {"data-initq": f"{query.lower()}", "data-it": "rq"})
+            'div', {"data-initq": f"{keyword.lower()}", "data-it": "rq"})
 
         questions = parent.select('div[data-sgrd="true"] > div')
-        with open(f'output/{query}_questions.csv', 'w', newline='', encoding='utf-8') as csv_file:
+        with open(f'output/{keyword}_questions.csv', 'w', newline='', encoding='utf-8') as csv_file:
             question_writer = csv.writer(
                 csv_file, delimiter='|', quoting=csv.QUOTE_MINIMAL)
             question_writer.writerow(
