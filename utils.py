@@ -141,3 +141,4 @@ def keywords_from_file(filepath):
         keywords = f.readlines()
 
     return keywords
+

@@ -9,4 +9,8 @@ webdriver_manager
 alembic~=1.8.1
 beautifulsoup4~=4.11.1
 lxml
-
+autopep8
+flake8
+mypy
+pytest
+Faker
