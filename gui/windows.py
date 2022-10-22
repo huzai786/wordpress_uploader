@@ -8,7 +8,7 @@ from db.operations import (
     add_keyword_to_db,
     delete_keyword_from_db
 )
-from utilities.utils import (
+from utils import (
     add_category_to_wp,
     add_keyword_to_wp,
     delete_keyword_from_wp

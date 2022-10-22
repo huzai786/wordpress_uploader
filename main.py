@@ -8,7 +8,7 @@ from db.operations import (
     delete_category_from_db,
     get_category_keywords_details, add_keyword_to_db
 )
-from wpposter.utils import delete_category_from_wp, keywords_from_file, add_keyword_to_wp
+from utils import delete_category_from_wp, keywords_from_file, add_keyword_to_wp
 
 keywords_detail_headings = [
     "id",

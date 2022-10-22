@@ -1,11 +1,18 @@
-from paascrape.browser import question_page
-from paascrape.parsing import parse
+from paascrape.parsing import parse_answers, extract_answer
+from bs4 import BeautifulSoup
 
-keyword = 'what+are+the+12+rules+of+life'
-html = question_page(query_keyword=keyword)
-if html:
-    parse(html, keyword)
-else:
-    print('paa section doesnt exists')
+with open('questions.html', 'r', encoding='utf-8') as f:
+    data = f.read()
+
+
+for q in data:
+    ques = BeautifulSoup(q, 'lxml')
+    question, answer = extract_answer(ques)
+
+
+
+
+
+
 
 
