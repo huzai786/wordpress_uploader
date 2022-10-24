@@ -17,7 +17,7 @@ def _check_exist(driver, selector):
 
 def _wait_for_elem(element, xpath):
     try:
-        element = WebDriverWait(element, 10).until(
+        element = WebDriverWait(element, 6).until(
                 EC.presence_of_element_located((By.XPATH, xpath))
             )
         return element
@@ -25,12 +25,3 @@ def _wait_for_elem(element, xpath):
     except TimeoutException:
         return None
 
-def _wait_for_click(element, xpath):
-    try:
-        element = WebDriverWait(element, 10).until(
-            EC.element_to_be_clickable((By.XPATH, xpath))
-        )
-        return element
-
-    except TimeoutException:
-        return None

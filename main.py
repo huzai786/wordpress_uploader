@@ -17,7 +17,6 @@ keywords_detail_headings = [
     "is processed",
     "no of questions"]
 
-
 sg.theme('DarkAmber')
 
 
@@ -41,7 +40,7 @@ def make_window():
 
     category_keywords_section = [
         [sg.Text('Keywords', font="SansSerif 12 bold"), sg.Push(), sg.Text('Category:', font="SansSerif 12 bold"),
-            sg.Text('---------------', key='-KEYWORD_COL_CAT-', font="SansSerif 12")],
+         sg.Text('---------------', key='-KEYWORD_COL_CAT-', font="SansSerif 12")],
 
         [sg.Table(values=[['--', '---', '---', '---', '---']], headings=keywords_detail_headings, size=(120, 16),
                   def_col_width=30, row_height=20, font="SansSerif 10", justification='center',
@@ -49,7 +48,7 @@ def make_window():
 
         [sg.Button('Add Keyword', key='-ADD_KEYWORD-'), sg.Button('Delete Keyword', key='-DELETE_KEYWORD-'),
          sg.Push(), sg.InputText(
-             key='-FILE_PATH-'), sg.FileBrowse(file_types=[('Text Files', '*.txt')]),
+            key='-FILE_PATH-'), sg.FileBrowse(file_types=[('Text Files', '*.txt')]),
          sg.Submit('Add from file', key='-ADD_KEYWORD_FROM_FILE-')]
 
     ]
@@ -65,8 +64,9 @@ def make_window():
         [sg.Frame('Settings', setting_layout,
                   element_justification='c', font="SansSerif 17 bold")],
 
-        [sg.Button('Start Scraping', tooltip='This will scrape questions from all non-processed keywords make sure you are ready!',
-                   size=(20, 2)), sg.Push(), sg.Button('Cancel', size=(15, 2))]
+        [sg.Button('Start Scraping',
+                   tooltip='This will scrape questions from all non-processed keywords make sure you are ready!',
+                   size=(20, 2), key='-START_SCRAPING-'), sg.Push(), sg.Button('Cancel', size=(15, 2))]
     ]
 
     screen = sg.Window('Wordpress automation', main_layout, finalize=True)
@@ -178,5 +178,11 @@ while True:
                 updated_keywords_table = [['--', '---', '---', '---', '---']]
             window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
             window.refresh()
+
+    elif event == '-START_SCRAPING-':
+        if sg.popup_ok_cancel('Are you sure you want to start scraping keywords data?') == 'OK':
+            print('Starting long process fake')
+            # window.perform_long_operation()
+
 
 window.close()

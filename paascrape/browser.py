@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 
 from webdriver_manager.chrome import ChromeDriverManager
 
-from .helper import _check_exist, _wait_for_elem
+from .helper import _wait_for_elem
 from exception import PAADoesNotExist
 
 
@@ -51,13 +51,14 @@ def get_page_source(query_keyword: str) -> str:
 
     # main workflow
     paa = _get_paa(driver)
-    print(paa)
+
     if paa:
         driver.execute_script("arguments[0].scrollIntoView();", paa)
         driver.execute_script("window.scrollBy(0, -200);")
         driver.implicitly_wait(10)
 
-        for i in range(1, 13):
+        for i in range(1, 11):
+            print('round', i, end='|')
             question_xpath = f'./div[{i}]//div[@role="button"]'
             question_button = _wait_for_elem(paa, question_xpath)
 
@@ -65,7 +66,6 @@ def get_page_source(query_keyword: str) -> str:
                 if not question_button.is_displayed():
                     print(question_button.location_once_scrolled_into_view)
 
-                print('round:', i)
                 question_button.click()
                 time.sleep(1)
                 driver.implicitly_wait(5)
@@ -73,6 +73,9 @@ def get_page_source(query_keyword: str) -> str:
                 question_button.click()
                 time.sleep(1)
                 driver.implicitly_wait(10)
+
+            else:
+                break
 
         html = driver.execute_script("return document.body.innerHTML")
         driver.quit()

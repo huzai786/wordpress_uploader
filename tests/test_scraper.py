@@ -15,15 +15,16 @@ def get_keywords(fn):
             yield k
 
 
-# keywords_sample1 = get_keywords('sample_set1.txt')
+keywords_sample1 = get_keywords('sample_set1.txt')
 
-keywords_sample2 = get_keywords('sample_set2.txt')
-@pytest.mark.parametrize('keyword', keywords_sample2)
+# keywords_sample2 = get_keywords('sample_set2.txt')
+@pytest.mark.parametrize('keyword', keywords_sample1)
 def test_get_page_source_sample_set_2(keyword):
     try:
         html = get_page_source(keyword)
         qnas = get_answers_from_source(html)
-        assert len(qnas) > 21
+        print(qnas[0])
+        assert qnas
 
     except PAADoesNotExist:
         pass
