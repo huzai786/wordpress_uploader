@@ -1,14 +1,13 @@
-from paascrape.parsing import parse_answers, extract_answer
-from bs4 import BeautifulSoup
+from paascrape.parsing import get_answers_from_source
+from paascrape.browser import get_page_source
 
-with open('questions.html', 'r', encoding='utf-8') as f:
-    data = f.read()
+q = 'Crema Catalana'
 
-
-for q in data:
-    ques = BeautifulSoup(q, 'lxml')
-    question, answer = extract_answer(ques)
-
+html = get_page_source(q)
+if html:
+    qna = get_answers_from_source(html)
+    print(*qna, sep='\n=========================\n')
+    print(len(qna))
 
 
 

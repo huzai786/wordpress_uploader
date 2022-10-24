@@ -6,9 +6,9 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 
 
-def _check_exist(driver, select_by, selector):
+def _check_exist(driver, selector):
     try:
-        elem = driver.find_element(select_by, selector)
+        elem = driver.find_element(By.XPATH, selector)
         if elem:
             return elem
 
@@ -18,9 +18,18 @@ def _check_exist(driver, select_by, selector):
 def _wait_for_elem(element, xpath):
     try:
         element = WebDriverWait(element, 10).until(
-            EC.presence_of_element_located((By.XPATH, xpath))
-        )
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+        return element
 
+    except TimeoutException:
+        return None
+
+def _wait_for_click(element, xpath):
+    try:
+        element = WebDriverWait(element, 10).until(
+            EC.element_to_be_clickable((By.XPATH, xpath))
+        )
         return element
 
     except TimeoutException:

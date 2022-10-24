@@ -1,0 +1,2 @@
+class PAADoesNotExist(Exception):
+    pass

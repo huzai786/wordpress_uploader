@@ -1,72 +1,24 @@
 import re
 import traceback
-from typing import Optional, Tuple, List, Any
-from urllib.parse import quote
+from typing import Optional, List, Any, Tuple
 
 from bs4 import Tag, BeautifulSoup
 
 
-def _tag_len_2(answer_content):
-    publication_date = None
-
-    # getting source url
-    source_url = answer_content[-1].find('div', class_="g").find('a')
-    url = source_url.attrs['href'] if source_url else None
-
-    # getting answer description
-    desc_type_answer = answer_content[0]
-    answer = (desc_type_answer.get_text()).replace(
-        "\n", "") if desc_type_answer else 'Answer Not Found!'
-    ans = re.sub(r'\s+', ' ', answer)
-    ans = re.sub(r'More items\.\.\.', '', ans)
-
-    date = re.findall(
-        r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})",
-        ans)
-
-    if date:
-        ans = ans.removesuffix(date[0][0])
-        publication_date = date[0][0]
-
-    return ans, url, publication_date
+def check_youtube(div: Tag) -> Optional[str]:
+    link = div.find('a', href=re.compile(r'https://www.youtube.com/watch'))
+    if link:
+        return link['href']
 
 
-def _tag_len_3(answer_content):
-    publication_date = None
-
-    # getting source url
-    source_url = answer_content[-1].find('div', class_="g").find('a')
-    url = source_url.attrs['href'] if source_url else None
-
-    # getting answer heading
-    answer_heading_tag = answer_content[0].find('div', {"role": "heading"})
-    answer_heading = answer_heading_tag.get_text() if answer_heading_tag else ''
-
-    # getting answer body
-    answer_body = answer_content[1].get_text()
-    answer = answer_heading.replace(
-        "\n", "") + '\n' + answer_body.replace("\n", "")
-    ans = re.sub(r'\s+', ' ', answer)
-    ans = re.sub(r'More items\.\.\.', '', ans)
-
-    date = re.findall(
-        r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})",
-        ans)
-    if date:
-        ans = ans.removesuffix(date[0][0])
-        publication_date = date[0][0]
-
-    return ans, url, publication_date
-
-
-def extract_answer(answer_block: Tag):
+def extract_answer(answer_block: Tag) -> Tuple:
     """
     Takes a html blob of single question and returns its relevant answer.
 
-    :rtype: Questions
     :param answer_block: Bs4 Tag element containing the relevant data
-    :return: NamedTuple containing the questions or None
     """
+    question = None
+    answer = []
 
     div_under_related_question_pair = answer_block.find('div', class_=re.compile(
         r'related-question-pair')).find('div', recursive=False)
@@ -74,65 +26,73 @@ def extract_answer(answer_block: Tag):
     items = [i for i in list(div_under_related_question_pair.children) if len(str(i)) > 10]
 
     if len(items) == 2:
-
-        question = ''
-        answer = ''
-
         question_tag, answer_tag = items
-        question = question_tag.find('span').text
 
+        question = question_tag.find('span').text
         first_two_tag_under_answer_tag = answer_tag.find_all('div', recursive=False)
 
         if len(first_two_tag_under_answer_tag) == 2:
 
             answer_tag = first_two_tag_under_answer_tag[0].find('div')
-            answer_content = answer_tag.find_all('div', recursive=False)
-            return answer_content.text
+            divs_with_only_id = answer_tag.find_all('div', recursive=False)
 
-            # if len(answer_content) == 2:
-            #     answer, source_url, publication_date = _tag_len_2(
-            #         answer_content)
-            #
-            # if len(answer_content) == 3:
-            #     answer, source_url, publication_date = _tag_len_3(
-            #         answer_content)
+            for div in divs_with_only_id[:-1]:
+                youtube_video_url = check_youtube(div)
+                if youtube_video_url:
+                    answer.append(youtube_video_url)
+                    break
 
-    else:
+                ans = div.text.replace('\n', '')
+
+                if ans:
+                    more_rows_check = re.findall(r"more rows$", ans)
+                    more_item_check = re.findall(r"More items\.\.\.$", ans)
+                    if more_item_check or more_rows_check:
+                        break
+                    date_check = re.findall(r"([0-9]{2}-(Jun|Feb|Jan|Mar|Apr|May|Jul|Aug|Sept|Oct|Nov|Dec)-[0-9]{4})$", ans)
+                    if date_check:
+                        ans = ans.removesuffix(date_check[0][0])
+
+                    answer.append(ans)
+
+    return question, answer
+
+
+def _get_questions(html: str,
+                   ) -> Optional[List]:
+    """returns all questions"""
+
+    bs = BeautifulSoup(html, 'lxml')
+    try:
+        main_block = bs.find(
+            'div', {
+                "id": "rso", "data-async-context": re.compile(r'query:')})
+
+        questions = main_block.select(
+            'div[data-sgrd="true"] > div')
+
+        return questions
+
+    except AttributeError:
         return None
 
-def _get_questions(bs: BeautifulSoup, keyword: str) -> List:
-    main_block = bs.find(
-        'div', {
-               "id": "rso", "data-async-context": f"query:{quote(keyword)}"})
-    questions_block = main_block.find(
-        'div', {"data-initq": f"{keyword.lower()}", "data-it": "rq"})
-    questions = questions_block.select('div[data-sgrd="true"] > div')
 
-    return questions
-
-def parse_answers(html: str,
-          keyword: str) -> list[tuple[Any, Any]]:
+def get_answers_from_source(html: str) -> list[tuple[Any, Any]]:
     """
-    parse question and their answers from a page
+    parse question and their answers from a page.
+
     :param html: html content with questions_html
-    :param keyword: keyword to search
     """
 
     questions_and_answers = []
 
-    bs = BeautifulSoup(html, 'lxml')
-    questions_html = _get_questions(bs, keyword)
-
+    questions_html = _get_questions(html)
+    print(len(questions_html))
     if questions_html:
-        for question in questions_html:
-            try:
-                extract_answer(question)
-                ques, ans = extract_answer(question)
-                if ans:
-                    questions_and_answers.append((ques, ans))
-
-            except (AttributeError, IndexError):
-                traceback.print_exc()
-                pass
+        if len(questions_html) > 20:
+            for question in questions_html:
+                qna = extract_answer(question)
+                if qna[1]:
+                    questions_and_answers.append((qna[0], qna[1]))
 
     return questions_and_answers

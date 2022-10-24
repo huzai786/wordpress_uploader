@@ -1,19 +1,39 @@
 import os
+import pytest
 
+from exception import PAADoesNotExist
 from paascrape.browser import get_page_source
+from paascrape.parsing import get_answers_from_source
+
 
 def get_keywords(fn):
-    fn = f'test_sample/{fn}'
-    if os.path.exists(fn):
-        with open(fn, 'r') as file:
-            keywords = file.readlines()
-            for k in keywords:
-                k = k.replace('\n', '')
-                yield k
+    filepath = os.path.join(os.getcwd(), 'browser_test_data', fn)
+    with open(filepath, 'r', encoding='utf-8') as file:
+        keywords = file.readlines()
+        for k in keywords:
+            k = k.replace('\n', '')
+            yield k
 
-def test_get_page_source_sample_set_1():
-    keywords = get_keywords('sample_set1.txt')
-    for k in keywords:
-        print(k)
-        assert type(get_page_source(k)) == str
+
+# keywords_sample1 = get_keywords('sample_set1.txt')
+
+keywords_sample2 = get_keywords('sample_set2.txt')
+@pytest.mark.parametrize('keyword', keywords_sample2)
+def test_get_page_source_sample_set_2(keyword):
+    try:
+        html = get_page_source(keyword)
+        qnas = get_answers_from_source(html)
+        assert len(qnas) > 21
+
+    except PAADoesNotExist:
+        pass
+
+
+# def test_get_page_source_sample_set_3():
+#     keywords = get_keywords('sample_set3.txt')
+#     for k in keywords:
+#         html = get_page_source(k)
+#         fname = '_'.join(k.split())
+#         save_result(f'{fname}.html', html)
+#         assert type(html) == str
 
