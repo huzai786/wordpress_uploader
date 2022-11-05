@@ -1,79 +1,31 @@
 """ main file to run to start the desktop application"""
 import PySimpleGUI as sg
 
-from gui.windows import add_category_window, add_keyword_window, delete_category_window
-
-from db.operations import (
+from db.crud import (
     get_categories_from_db,
     delete_category_from_db,
-    get_category_keywords_details, add_keyword_to_db
+    get_cat_kw_details,
 )
-from utils import delete_category_from_wp, keywords_from_file, add_keyword_to_wp
+from gui.utils import (
+    get_keywords_from_file,
+    process_keywords,
+    update_keywords_table,
+    add_keywords_from_file,
+    post_keywords_data,
+)
+from gui.windows import (
+    add_category_window,
+    add_keyword_window,
+    delete_keyword_window,
+    main_window
 
-keywords_detail_headings = [
-    "id",
-    "\tKeyword                ",
-    "is posted",
-    "is processed",
-    "no of questions"]
-
-sg.theme('DarkAmber')
-
-
-def make_window():
-    """create a window object"""
-
-    categories = [i for i in get_categories_from_db()]
-
-    category_section = [[sg.Text('Categories',
-                                 font="monospace 12 bold")],
-                        [sg.Listbox(categories,
-                                    size=(30,
-                                          20),
-                                    key='_LIST_',
-                                    select_mode=sg.LISTBOX_SELECT_MODE_SINGLE,
-                                    bind_return_key=True)],
-                        [sg.Button('Add Category',
-                                   key='-ADD_CATEGORY-'),
-                         sg.Button('Delete Category',
-                                   key='-DELETE_CATEGORY-')]]
-
-    category_keywords_section = [
-        [sg.Text('Keywords', font="SansSerif 12 bold"), sg.Push(), sg.Text('Category:', font="SansSerif 12 bold"),
-         sg.Text('---------------', key='-KEYWORD_COL_CAT-', font="SansSerif 12")],
-
-        [sg.Table(values=[['--', '---', '---', '---', '---']], headings=keywords_detail_headings, size=(120, 16),
-                  def_col_width=30, row_height=20, font="SansSerif 10", justification='center',
-                  key='-KEYWORDS_TABLE-')],
-
-        [sg.Button('Add Keyword', key='-ADD_KEYWORD-'), sg.Button('Delete Keyword', key='-DELETE_KEYWORD-'),
-         sg.Push(), sg.InputText(
-            key='-FILE_PATH-'), sg.FileBrowse(file_types=[('Text Files', '*.txt')]),
-         sg.Submit('Add from file', key='-ADD_KEYWORD_FROM_FILE-')]
-
-    ]
-
-    setting_layout = [
-        [sg.Column(category_section), sg.Column(category_keywords_section)]
-    ]
-
-    main_layout = [
-        [sg.Text("Wordpress Automation", justification='c',
-                 font='SansSerif 17 bold', size=50)],
-
-        [sg.Frame('Settings', setting_layout,
-                  element_justification='c', font="SansSerif 17 bold")],
-
-        [sg.Button('Start Scraping',
-                   tooltip='This will scrape questions from all non-processed keywords make sure you are ready!',
-                   size=(20, 2), key='-START_SCRAPING-'), sg.Push(), sg.Button('Cancel', size=(15, 2))]
-    ]
-
-    screen = sg.Window('Wordpress automation', main_layout, finalize=True)
-    return screen
+)
+from wp_api.operation import delete_category_from_wp
 
 
-window = make_window()
+# sg.theme('DarkAmber')
+
+window = main_window()
 
 while True:
     event, values = window.read()
@@ -82,107 +34,109 @@ while True:
         break
 
     elif event == '-ADD_CATEGORY-':
-        add_category_window()
-        updated_category = [i for i in get_categories_from_db()]
-        window['_LIST_'].update(updated_category)
-        window.refresh()
+        refresh = add_category_window()
+        if refresh:
+            updated_category = get_categories_from_db()
+            window['-CATEGORY_LIST-'].update(updated_category)
+            update_keywords_table(window)
+            window.refresh()
 
-    elif event == '_LIST_':
-        # tuple(id: int, name: str)
-        current_category_id, current_category_name = values['_LIST_'][0]
-
-        updated_keywords_table = get_category_keywords_details(
-            current_category_id)
-        if not updated_keywords_table:
-            updated_keywords_table = [['--', '---', '---', '---', '---']]
-        window['-KEYWORD_COL_CAT-'].update(current_category_name)
-        window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
+    elif event == '-CATEGORY_LIST-':  # When a category is clicked
+        if values['-CATEGORY_LIST-']:
+            category_id, category_name = values['-CATEGORY_LIST-'][0]
+            update_keywords_table(window, category_id, category_name)
 
     elif event == '-DELETE_CATEGORY-':
-        selected_category = values['_LIST_']
+        category = values['-CATEGORY_LIST-']
 
-        if not selected_category:
+        if not category:
             sg.popup_error('No category selected!')
 
         else:
-            # tuple(id: int, name: str)
-            selected_category_id, selected_category_name = selected_category[0]
-            if sg.popup_ok_cancel(
-                    f'are you sure you want to delete category "{selected_category_name}"?') == 'OK':
-                if delete_category_from_wp(selected_category_id):
-                    delete_category_from_db(selected_category_id)
-                    updated_categories = [i for i in get_categories_from_db()]
-                    window['_LIST_'].update(updated_categories)
-                    window['-KEYWORD_COL_CAT-'].update('-----------------')
-                    window.refresh()
+            category_id, category_name = category[0]
+            has_keywords = get_cat_kw_details(category_id)
+            if has_keywords:
+                sg.popup_error('Delete keywords first!')
+            else:
+                if sg.popup_ok_cancel(
+                        f'are you sure you want to delete category "{category_name}"?') == 'OK':
+                    if delete_category_from_wp(category_id):
+                        delete_category_from_db(category_id)
 
-                else:
-                    sg.popup_error('We have encountered an unknown error!')
+                        updated_categories = get_categories_from_db()
+                        window['-CATEGORY_LIST-'].update(updated_categories)
+                        update_keywords_table(window)
+                        window.refresh()
+
+                    else:
+                        sg.popup_error('We have encountered an unknown error!')
 
     elif event == '-ADD_KEYWORD-':
-        selected_category = values['_LIST_']
+        category = values['-CATEGORY_LIST-']
 
-        if not selected_category:
+        if not category:
             sg.popup_error('No category selected!')
 
         else:
-            # tuple(id: int, name: str)
-            selected_category_id, selected_category_name = selected_category[0]
-            add_keyword_window(selected_category_id)
-            updated_keywords_table = get_category_keywords_details(
-                selected_category_id)
-            window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
+            category_id, category_name = category[0]
+            add_keyword_window(category_id)
+            update_keywords_table(window, category_id, category_name)
 
     elif event == '-ADD_KEYWORD_FROM_FILE-':
         file_path = values['-FILE_PATH-']
-        selected_category = values['_LIST_']
+        category = values['-CATEGORY_LIST-']
 
         if file_path:
-            if not selected_category:
+            if not category:
                 sg.popup_error('No category selected!')
 
             else:
-                keywords = keywords_from_file(file_path)
-                selected_category_id, selected_category_name = selected_category[0]
-                current_keywords = [i[1] for i in get_category_keywords_details(
-                    selected_category_id) if get_category_keywords_details(selected_category_id)]
-                for k in keywords:
-                    k = k.replace('\n', '')
-                    if k not in current_keywords:
-                        keyword_id = add_keyword_to_wp(selected_category_id, k)
-                        if not keyword_id:
-                            pass
-                        add_keyword_to_db(selected_category_id, keyword_id, k)
-                        updated_keywords_table = get_category_keywords_details(
-                            selected_category_id)
-                        window['-KEYWORDS_TABLE-'].update(
-                            updated_keywords_table)
-                        window.refresh()
+                keywords = get_keywords_from_file(file_path)
+                category_id, category_name = category[0]
+
+                window.perform_long_operation(lambda: add_keywords_from_file(keywords, category_id),
+                                              end_key='-FROM_FILE_ADDED-')
+
+                sg.popup_auto_close(f'adding {len(keywords)} keywords, it may take few seconds')
                 window['-FILE_PATH-'].update('')
         else:
             sg.popup_error('No file selected!')
 
-    elif event == '-DELETE_KEYWORD-':
-        selected_category = values['_LIST_']
+    # Long operation returns
+    elif event == '-FROM_FILE_ADDED-':
+        category = values['-CATEGORY_LIST-']
+        category_id, category_name = category[0]
+        update_keywords_table(window, category_id, category_name)
+        sg.popup_auto_close('Added keywords!')
 
-        if not selected_category:
+    elif event == '-DELETE_KEYWORD-':
+        category = values['-CATEGORY_LIST-']
+
+        if not category:
             sg.popup_error('No category selected!')
 
         else:
-            # tuple(id: int, name: str)
-            selected_category_id, selected_category_name = selected_category[0]
-            delete_category_window(selected_category_id)
-            updated_keywords_table = get_category_keywords_details(
-                selected_category_id)
-            if not updated_keywords_table:
-                updated_keywords_table = [['--', '---', '---', '---', '---']]
-            window['-KEYWORDS_TABLE-'].update(updated_keywords_table)
-            window.refresh()
+            category_id, category_name = category[0]
+
+            delete_keyword_window(category_id)
+            update_keywords_table(window, category_id, category_name)
 
     elif event == '-START_SCRAPING-':
         if sg.popup_ok_cancel('Are you sure you want to start scraping keywords data?') == 'OK':
-            print('Starting long process fake')
-            # window.perform_long_operation()
+            window.perform_long_operation(process_keywords, end_key='-SCRAPING_LONG_OPERATION-')
 
+    elif event == '-START_POSTING-':
+        if sg.popup_ok_cancel('Are you sure you want to start posting?') == 'OK':
+            window.perform_long_operation(post_keywords_data, end_key='-POSTING_LONG_OPERATION-')
+
+    elif event == '-SCRAPING_LONG_OPERATION-':
+        sg.popup_auto_close('Done Scraping!')
+        window.close()
+        window = main_window()
+
+    elif event == '-POSTING_LONG_OPERATION-':
+        sg.popup_auto_close('Done Posting!')
+        window.close()
+        window = main_window()
 
 window.close()

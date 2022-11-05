@@ -1,15 +1,14 @@
-from sqlalchemy import ForeignKey, Column, Integer, String, Boolean
+from sqlalchemy import ForeignKey, Column, Integer, String, Boolean, PickleType
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
 
 class Category(Base):
-
     __tablename__ = "category"
 
     id = Column(Integer, primary_key=True)
-    wp_id = Column(Integer, nullable=False, unique=True)
+    wp_id = Column(Integer, nullable=False, unique=True, index=True)
     name = Column(String)
 
     child_categories = relationship(
@@ -22,16 +21,17 @@ class Category(Base):
 
 
 class Keyword(Base):
-
     __tablename__ = "keyword"
 
     id = Column(Integer, primary_key=True)
-    wp_id = Column(Integer, unique=True)
+    wp_id = Column(Integer, unique=True, index=True)
     name = Column(String)
+
     questions = relationship(
         "Question", back_populates="keyword", cascade="all, delete-orphan")
     is_processed = Column(Boolean, nullable=True, default=False)
     is_posted = Column(Boolean, nullable=True, default=False)
+    post_id = Column(String, nullable=True)
 
     category_id = Column(String, ForeignKey('category.id'), nullable=True)
     parent_category = relationship(
@@ -42,12 +42,11 @@ class Keyword(Base):
 
 
 class Question(Base):
-
     __tablename__ = "question"
 
     id = Column(Integer, primary_key=True)
-    question = Column(String)
-    answer = Column(String)
+    qna = Column(PickleType())
+    question_image = Column(String, nullable=True)
 
     keyword_id = Column(Integer, ForeignKey('keyword.id'), nullable=False)
     keyword = relationship("Keyword", back_populates='questions')

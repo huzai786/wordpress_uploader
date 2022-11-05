@@ -3,13 +3,13 @@ from typing import Optional
 
 from bs4 import ResultSet
 
-from paascrape.holder import AnswerType, Answer
+from paascrape.container import AnswerType, Answer
 
 
 def _youtube_check(divs: ResultSet,
                    answer_class: Answer) -> Optional[Answer]:
     for div in divs:
-        link = div.find('a', href=re.compile(r'https://www.youtube.com/watch'))
+        link = div.find('a', {"ping": re.compile(r'/url?')}, href=re.compile(r'https://www.youtube.com/watch'))
         if link:
             answer_class.answer_type = AnswerType.Youtube
             answer_class.answer = link['href']
@@ -107,7 +107,10 @@ def _get_paragraph_answer(divs: ResultSet,
                 if ans:
                     answer_class.answer = ans
 
-    if answer_class.answer:
+    if answer_class.answer and 'YouTubeYouTubeStart' not in answer_class.answer:
         return answer_class
+    else:
+        return None
 
-    return None
+
+

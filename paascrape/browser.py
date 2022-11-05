@@ -10,19 +10,14 @@ from .helper import _wait_for_elem
 from exception import PAADoesNotExist
 
 
-def _chrome_options():
-
+def get_driver(headless=True):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    if headless:
+        options.add_argument("--headless")
     options.add_argument("start-maximized")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    return options
-
-
-def get_driver():
-    option = _chrome_options()
     driver = webdriver.Chrome(service=ChromeService(
-        ChromeDriverManager().install()), options=option)
+        ChromeDriverManager().install()), options=options)
 
     return driver
 
@@ -57,8 +52,7 @@ def get_page_source(query_keyword: str) -> str:
         driver.execute_script("window.scrollBy(0, -200);")
         driver.implicitly_wait(10)
 
-        for i in range(1, 11):
-            print('round', i, end='|')
+        for i in range(1, 12):
             question_xpath = f'./div[{i}]//div[@role="button"]'
             question_button = _wait_for_elem(paa, question_xpath)
 
@@ -77,10 +71,12 @@ def get_page_source(query_keyword: str) -> str:
             else:
                 break
 
+        print('Automation completed!')
         html = driver.execute_script("return document.body.innerHTML")
         driver.quit()
 
     else:
+        print('paa doesnt exists!')
         raise PAADoesNotExist('paa section does not exists')
 
     return html

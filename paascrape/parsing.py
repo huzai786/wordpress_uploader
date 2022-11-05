@@ -3,7 +3,9 @@ from typing import Optional, List
 
 from bs4 import Tag, BeautifulSoup
 
-from paascrape.holder import Answer
+from exception import PAADoesNotExist
+from paascrape.browser import get_page_source
+from paascrape.container import Answer
 from paascrape.utils import _youtube_check, _table_check, _list_check, _get_paragraph_answer
 
 
@@ -13,10 +15,11 @@ def extract_answer(answer_block: Tag):
 
     :param answer_block: Bs4 Tag element containing the relevant data
     """
-
     div_under_related_question_pair = answer_block.find('div', class_=re.compile(
         r'related-question-pair')).find('div', recursive=False)
-    question_answer_tags = [i for i in list(div_under_related_question_pair.children) if len(str(i)) > 10]
+
+    question_answer_tags = div_under_related_question_pair.find_all('div', recursive=False)
+
     if len(question_answer_tags) == 2:
 
         question_tag, answer_tag = question_answer_tags
@@ -73,12 +76,20 @@ def get_answers_from_source(html: str) -> list[Answer]:
     questions_and_answers = []
 
     questions_html = _get_questions(html)
-    print('questions_html', len(questions_html))
     if questions_html:
         for question in questions_html:
             qna = extract_answer(question)
             if qna:
                 questions_and_answers.append(qna)
 
-    print('questions_and_answers', len(questions_and_answers))
     return questions_and_answers
+
+
+def get_answers(keyword: str) -> Optional[list[Answer]]:
+    try:
+        html = get_page_source(keyword)
+        answers = get_answers_from_source(html)
+        return answers if answers else None
+
+    except PAADoesNotExist:
+        return None

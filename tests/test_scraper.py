@@ -29,12 +29,3 @@ def test_get_page_source_sample_set_2(keyword):
     except PAADoesNotExist:
         pass
 
-
-# def test_get_page_source_sample_set_3():
-#     keywords = get_keywords('sample_set3.txt')
-#     for k in keywords:
-#         html = get_page_source(k)
-#         fname = '_'.join(k.split())
-#         save_result(f'{fname}.html', html)
-#         assert type(html) == str
-
