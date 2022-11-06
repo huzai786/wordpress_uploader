@@ -47,13 +47,17 @@ def process_keywords():
     """get all non-processed keywords and scrape questions from each keyword then finally dump them in the database"""
 
     ids = get_keywords_unprocessed()
-    print(ids)
-    if ids:
-        for i, k in ids:
-            print(k)
-            answers = get_answers(k)
+    print("get_keywords_unprocessed", ids)
+    if ids:  # DB ID, KEYWORD
+        for db_id, keyword in ids:
+            print(keyword)
+            answers = get_answers(keyword)
             if answers:
-                dump_keyword_questions_in_db(answers, i)
+                # Saves the answers as html formatted
+                # Opens them with selenium
+                # Gets the screenshot binary data and question string
+                # Saves them in the database
+                dump_keyword_questions_in_db(answers, db_id)
 
 
 def update_keywords_table(window, i_d=None, name=None):
