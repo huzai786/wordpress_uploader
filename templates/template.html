@@ -17,7 +17,6 @@
     article {
         padding: 30px;
 	    margin-bottom: 10px;
-        box-shadow: 3px 10px 30px lightblue;
     }
     a:link { text-decoration: none; }
     a:visited { text-decoration: none; }
@@ -29,17 +28,16 @@
   <body>
     <div class="container" style="width:65%;">
       {% for question in questions %}
-      <article class="{{ question.question }}">
+      {% if question.answer_type.value != 'youtube' %}
+      <article class="{{ question.question }}" link="{{ question.truncated_info_link }}">
+
         <div>
-          <h4>{{ question.question }}</h4>
             {% if question.answer_heading %}
               <h5>{{ question.answer_heading }}</h5>
             {% endif %}
 
-          {% if question.answer_type.value == 'youtube' %}
-            <iframe src="{{ qna.answer }}"></iframe>
-
-          {% elif question.answer_type.value == 'table' %}
+          <!-- TABLE BLOCK START-->
+          {% if question.answer_type.value == 'table' %}
           <table>
             <tbody>
             <tr>
@@ -57,25 +55,31 @@
             </tbody>
           </table>
 
-          {% if question.Truncated_info_link %}
-          <a href='{{ question.Truncated_info_link }}' class="">see more</a>
+          {% if question.truncated_info_link %}
+          <a href='{{ question.truncated_info_link }}' class="">see more</a>
           {% endif %}
+          <!-- TABLE BLOCK ENDS-->
 
+          <!-- LIST BLOCK STARTS-->
           {% elif question.answer_type.value == 'list' %}
           <ul>
             {% for i in question.answer %}
               <li>{{ i }}</li>
             {% endfor %}
           </ul>
-          {% if question.Truncated_info_link %}
-            <a href='{{ question.Truncated_info_link }}'>see more</a>
+          {% if question.truncated_info_link %}
+            <a href='{{ question.truncated_info_link }}'>see more</a>
           {% endif %}
+          <!-- LIST BLOCK ENDS-->
 
+          <!-- PARA BLOCK STARTS-->
           {% elif question.answer_type.value == 'paragraph' %}
             <p>{{ question.answer }}</p>
           {% endif %}
+          <!-- PARA BLOCK ENDS-->
         </div>
       </article>
+      {% endif %}
       {% endfor %}
 
     </div>

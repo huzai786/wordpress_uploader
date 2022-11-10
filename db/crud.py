@@ -1,14 +1,17 @@
 """crud operations"""
 import os
-from typing import List, Tuple
+from collections import namedtuple
+from typing import List, Tuple, Optional
 
 from sqlalchemy import create_engine, select, delete
 from sqlalchemy.orm import Session
 
 from db.models import Category, Keyword, Question
-from paascrape.container import Answer
 
+# initiate a engine
 e = create_engine(f'sqlite:///{os.getcwd()}\\database.db')
+
+keyword_detail = namedtuple('Keyword_data', ['keyword_name', 'keyword_id', "excerpt", "render_data"])
 
 
 def add_category_to_db(category_id: int,
@@ -98,33 +101,37 @@ def get_cat_kw_details(wp_category_id):
         stmt = select(Keyword).where(
             Keyword.parent_category.has(Category.wp_id == wp_category_id))
         keyword_details = session.execute(stmt).all()
-        if keyword_details:
-            for keyword in keyword_details:
-                k = keyword[0]
-                rows.append([k.wp_id, k.name, k.is_posted,
-                             k.is_processed, len(k.questions)])
+        if not keyword_details:
+            return rows
+
+        for keyword in keyword_details:
+            k = keyword[0]
+            rows.append([k.wp_id, k.name, k.is_posted,
+                         k.is_processed, len(k.questions)])
 
     return rows
 
 
-def dump_keyword_questions_in_db(answers: List[Answer],
-                                 keyword_id: int) -> None:
+def add_keyword_questions_to_db(keyword_id: int, excerpt: str, question_data_list: List[dict]) -> None:
     """
     Associate the questions data to a keyword.
 
-    :param answers: List of Answer dataclass
+    :param excerpt:
+    :param question_data_list: list of dicts of keyword data
     :param keyword_id: keyword id to associate to
     """
     global e
 
     with Session(e) as session:
         keyword = session.execute(select(Keyword).where(Keyword.wp_id == keyword_id)).first()[0]
-        for answer in answers:
+        for question_data in question_data_list:
+            q = Question(question_string=question_data.get('question'), image_url=question_data.get('url'),
+                         image_wp_id=question_data.get('image_id'), link=question_data.get('link'))
 
-            ans = Question(qna=answer)
-            keyword.questions.append(ans)
-            session.add(ans)
+            keyword.questions.append(q)
+            session.add(q)
         keyword.is_processed = True
+        keyword.excerpt = excerpt
         session.commit()
 
 
@@ -137,29 +144,34 @@ def get_keywords_unprocessed():
         return [(i[0].wp_id, i[0].name) for i in kws if kws]
 
 
-def get_keywords_non_posted() -> List[Tuple[str, str, List[Answer]]]:
+def get_keywords_non_posted() -> list[keyword_detail]:
     """get all processed and not posted keywords"""
     global e
-    keywords = []
+    keywords_data = []
+
     with Session(e) as session:
         kws = session.execute(select(Keyword).where(Keyword.is_processed == True, Keyword.is_posted == False)).all()
-        for k in kws:
-            k = k[0]
-            name = k.name
-            _id = k.wp_id
-            qnas = [i.qna for i in k.questions]
-            keywords.append((name, _id, qnas))
+        for kw in kws:
+            kw = kw[0]
+            kw_name = kw.name
+            kw_id = kw.wp_id
+            excerpt = kw.excerpt
+            images_url_and_link = [(i.image_url, i.link, i.question_string) for i in kw.questions]
 
-    return keywords
+            k = keyword_detail(keyword_name=kw_name, keyword_id=kw_id, excerpt=excerpt, render_data=images_url_and_link)
+
+            keywords_data.append(k)
+
+    return keywords_data
 
 
-def update_keyword_status_processed(keyword_id: int,
+def update_keyword_status_processed(keyword_id: str,
                                     post_id: int) -> None:
     """
     add post_id to a keyword instance.
 
-    :param keyword_id:
-    :param post_id:
+    :param keyword_id: Word press sub category id
+    :param post_id: Word press post id
     """
     global e
     with Session(e) as session:
@@ -179,3 +191,14 @@ def get_keyword_post_id(keyword_id: int):
             return kw.post_id
         else:
             return None
+
+def get_keyword_media_ids(keyword_id: int) -> Optional[List]:
+    global e
+    with Session(e) as session:
+        kw = session.execute(select(Keyword).where(
+            Keyword.wp_id == keyword_id)).first()[0]
+        if len(kw.questions) > 0:
+            return [i.image_wp_id for i in kw.questions]
+
+        return None
+

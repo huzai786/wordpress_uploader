@@ -6,11 +6,13 @@ from db.crud import (
     delete_category_from_db,
     get_cat_kw_details,
 )
-from gui.utils import (
+from gui.helper import (
     get_keywords_from_file,
-    process_keywords,
     update_keywords_table,
-    add_keywords_from_file,
+    add_keywords_from_file
+)
+from gui.processing import (
+    process_keywords,
     post_keywords_data,
 )
 from gui.windows import (

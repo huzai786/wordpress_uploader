@@ -1,11 +1,9 @@
 """operational utilities for gui"""
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import RequestException
-
-from wp_api.container import PostData
 
 
 WP_URL = "http://mylocalsite/wp-json/wp/v2"
@@ -72,8 +70,7 @@ def delete_category_from_wp(category_id: int) -> bool:
         return False
 
 
-def add_keyword_to_wp(parent_id: int,
-                      keyword_name: str) -> Optional[int]:
+def add_keyword_to_wp(parent_id: int, keyword_name: str) -> Optional[int]:
     """
     add keyword as sub-category to the word press.
 
@@ -143,8 +140,8 @@ def delete_post_from_wp(post_id):
     :return: returns True if successful, else return False
     """
     global WP_URL, headers, auth
-    try:
-        res = requests.delete(
+
+    res = requests.delete(
             WP_URL +
             f'/posts/{post_id}',
             auth=auth,
@@ -152,34 +149,32 @@ def delete_post_from_wp(post_id):
             json={
                 "force": True})
 
-        if res.status_code == 200:
-            deleted = res.json().get('deleted')
-            if deleted:
-                return True
-            else:
-                return None
+    res.raise_for_status()
+    if not res.status_code == 200:
+        raise RequestException('request is successful but cant delete')
 
-    except RequestException as e:
-        print(e)
-        return None
+    return True
 
-
-def create_post(category_id: int, post_data: PostData) -> Optional[int]:
+def create_post(category_id: str, title: str, excerpt: str, content: str) -> Optional[int]:
     """create a post under the provided category.
 
+    :param excerpt: content excerpt
+    :param content: html content
+    :param title: title of the post
     :param category_id: sub category/ keyword id
-    :param post_data: post data
+
     :rtype: If successfully created, it will return the newly created post id, else returns None
     """
 
     global WP_URL, headers, auth
     data = {
-        "title": post_data.title,
-        "slug": post_data.slug,
-        "status": post_data.status,
-        "content": post_data.content,
-        "excerpt": post_data.excerpt,
-        "categories": [category_id]
+        "title": title,
+        "slug": title,
+        "status": 'publish',
+        "content": content,
+        "excerpt": excerpt,
+        "categories": [category_id],
+        "format": "image"
     }
     try:
         res = requests.post(WP_URL + '/posts', headers=headers, auth=auth, json=data)
@@ -194,4 +189,24 @@ def create_post(category_id: int, post_data: PostData) -> Optional[int]:
         print(e)
         return None
 
+
+def upload_image(name: str, image: bytes) -> Optional[Tuple[str, str]]:
+    headers = {"Content-Disposition": f'attachment; filename="{name}.jpg"',
+               "Accept": "application/json"}
+    try:
+        res = requests.post(WP_URL + '/media', auth=auth, headers=headers, data=image)
+        if i := res.json().get('id'):
+            return i, res.json().get('guid').get('raw')
+
+    except RequestException as e:
+        print(e)
+        return None
+
+
+def delete_media_from_wp(media_id):
+    global WP_URL, headers, auth
+    res = requests.delete(WP_URL + f'/media/{media_id}', auth=auth, headers=headers, json={"force": True})
+    res.raise_for_status()
+    if not res.status_code == 200:
+        raise RequestException('request is successful but cant delete')
 

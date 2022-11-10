@@ -1,0 +1,11 @@
+{# templates/template.html #}
+{% for url, link, question in urls %}
+<span>
+        <h3>{{ question }}?</h3>
+        {% if link == 'None' %}
+                <img src="{{ url }}" alt="">
+        {% else %}
+                <a href="{{ link }}"><img src="{{ url }}"></a>
+        {% endif %}
+</span>
+{% endfor %}

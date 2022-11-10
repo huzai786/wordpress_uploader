@@ -7,7 +7,7 @@ from db.crud import (
     get_cat_kw_details,
     add_keyword_to_db,
 )
-from gui.utils import delete_keyword
+from gui.processing import delete_keyword
 from wp_api.operation import (
     add_category_to_wp,
     add_keyword_to_wp,
@@ -104,7 +104,7 @@ def delete_keyword_window(cat_id):
         [sg.Listbox(keywords, select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE, key='-KEYWORD_LIST-', size=(30, 20),
                     enable_events=True),
          sg.Button('Delete Selected Keywords?', key='-DELETE-'), sg.Button('Delete all', key='-DELETE_ALL-'),
-         sg.Button('Cancel')],
+         sg.Button('Close')],
     ]
 
     window = sg.Window('delete keyword', delete_keyword_window_layout)
@@ -112,11 +112,11 @@ def delete_keyword_window(cat_id):
     while True:
         event, value = window.read()
 
-        if event in (sg.WIN_CLOSED, 'Cancel'):
+        if event in (sg.WIN_CLOSED, 'Close'):
             break
 
         elif event == '-DELETE-':
-            keywords = value['-KEYWORD_LIST-']
+            keywords = {i[0] for i in value['-KEYWORD_LIST-']}
             if not keywords:
                 sg.popup_error('No keyword selected!')
             else:
@@ -132,8 +132,7 @@ def delete_keyword_window(cat_id):
                         break
 
         elif event == '-DELETE_ALL-':
-            keywords = [(i[0], i[1]) for i in get_cat_kw_details(cat_id)]
-
+            keywords = {i[0] for i in get_cat_kw_details(cat_id)}
             if sg.popup_ok_cancel(f'delete {len(keywords)} keywords?') == 'OK':
                 sg.popup_auto_close('deleting all keywords, this may take few seconds!')
                 window.perform_long_operation(lambda: delete_keyword(keywords, cat_id),

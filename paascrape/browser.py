@@ -14,7 +14,7 @@ def get_driver(headless=True):
     options = webdriver.ChromeOptions()
     if headless:
         options.add_argument("--headless")
-
+    options.add_argument('--maximize-window')
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(service=ChromeService(
         ChromeDriverManager().install()), options=options)

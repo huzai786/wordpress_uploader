@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Column, Integer, String, Boolean, PickleType
+from sqlalchemy import ForeignKey, Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -26,7 +26,7 @@ class Keyword(Base):
     id = Column(Integer, primary_key=True)
     wp_id = Column(Integer, unique=True, index=True)
     name = Column(String)
-
+    excerpt = Column(String, nullable=True)
     questions = relationship(
         "Question", back_populates="keyword", cascade="all, delete-orphan")
     is_processed = Column(Boolean, nullable=True, default=False)
@@ -45,9 +45,10 @@ class Question(Base):
     __tablename__ = "question"
 
     id = Column(Integer, primary_key=True)
-    qna = Column(PickleType())
-    question_image = Column(String, nullable=True)
-
+    question_string = Column(String)
+    image_url = Column(String)
+    image_wp_id = Column(String)
+    link = Column(String, nullable=True)
     keyword_id = Column(Integer, ForeignKey('keyword.id'), nullable=False)
     keyword = relationship("Keyword", back_populates='questions')
 

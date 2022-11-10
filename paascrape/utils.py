@@ -44,7 +44,7 @@ def _table_check(divs: ResultSet,
                 if links:
                     for a in links:
                         if 'more' in a.text:
-                            answer_class.Truncated_info_link = a['href']
+                            answer_class.truncated_info_link = a['href']
                             break
 
             if table_heading:
@@ -77,7 +77,7 @@ def _list_check(divs: ResultSet,
 
             more_item_link = div.find('a', class_="truncation-information")
             if more_item_link:
-                answer_class.Truncated_info_link = more_item_link['href']
+                answer_class.truncated_info_link = more_item_link['href']
             answer_class.answer_type = AnswerType.List
             return answer_class
 
