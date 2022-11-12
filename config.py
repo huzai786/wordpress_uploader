@@ -1,2 +1,2 @@
 SITE_URL = 'mylocalsite'
-APPLICATION_PASSWORD = "fjO6 A5zL xJr8 IauN XI5j yWLN"
+APPLICATION_PASSWORD = "iPcc aX8E xSQN fkb5 KmFu 8jAB"
