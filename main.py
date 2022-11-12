@@ -24,7 +24,7 @@ from gui.windows import (
 )
 from wp_api.operation import delete_category_from_wp
 
-
+SITE_URL = 'mylocalsite'
 # sg.theme('DarkAmber')
 
 window = main_window()

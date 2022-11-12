@@ -4,9 +4,9 @@ from typing import Optional, Tuple
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import RequestException
+from main import SITE_URL
 
-
-WP_URL = "http://mylocalsite/wp-json/wp/v2"
+WP_URL = f"http://{SITE_URL}/wp-json/wp/v2"
 headers = {"Accept": "application/json", "Content-Type": "application/json"}
 auth = HTTPBasicAuth('user', 'avg6 vSOR 1o5R uVmy z5O1 qSEZ')
 

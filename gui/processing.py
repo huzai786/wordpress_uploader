@@ -63,11 +63,11 @@ def process_keywords():
             question_string = ' '.join([i for i in question_data['name'].split('_')])
             data = {"question": question_string, "url": image_url, "image_id": image_id, 'link': question_data['link']}
             keyword_data.append(data)
-            print(f'keyword: "{keyword_string}"  -FAILED!')
 
         excerpt = next([i.question, i.answer] for i in answers if i.answer_type.value == 'paragraph')
         excerpt = excerpt[0] + "\n" + excerpt[1]
         add_keyword_questions_to_db(keyword_id, excerpt, keyword_data)
+        print(f'keyword: "{keyword_string}"  -PASSED!')
         os.unlink(path)
 
 
