@@ -4,11 +4,11 @@ from typing import Optional, Tuple
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import RequestException
-from main import SITE_URL
+from config import SITE_URL, APPLICATION_PASSWORD
 
 WP_URL = f"http://{SITE_URL}/wp-json/wp/v2"
 headers = {"Accept": "application/json", "Content-Type": "application/json"}
-auth = HTTPBasicAuth('user', 'avg6 vSOR 1o5R uVmy z5O1 qSEZ')
+auth = HTTPBasicAuth('user', APPLICATION_PASSWORD)
 
 
 def add_category_to_wp(category_name: str) -> Optional[int]:

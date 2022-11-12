@@ -1,0 +1,2 @@
+SITE_URL = 'mylocalsite'
+APPLICATION_PASSWORD = "fjO6 A5zL xJr8 IauN XI5j yWLN"
